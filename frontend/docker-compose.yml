@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://user:password@db:5432/innovsense
+      - SECRET_KEY=${SECRET_KEY}
+    volumes:
+      - ./backend/ml_models:/app/ml_models
+    depends_on:
+      - db
+    networks:
+      - innovsense-network
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "8501:8501"
+    environment:
+      - API_URL=http://backend:8000/api/v1
+    depends_on:
+      - backend
+    networks:
+      - innovsense-network
+
+  db:
+    image: postgres:13
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=innovsense
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - innovsense-network
+
+volumes:
+  postgres_data:
+
+networks:
+  innovsense-network:
+    driver: bridge
